@@ -1,5 +1,55 @@
-* uni-trace
+﻿* uni-trace
 
-Universal Trace Debugger Engine. Currently, only support windbg on Windows, but the long term goal is to also support GDB or LLDB
+Universal Trace Debugger Engine. Currently, only support windbg on Windows, but the long term goal is to also support GDB or LLDB.
 
+** Introduction
+*** History
+This project is mainly inspired by [[https://kenai.com/projects/btrace][BTrace for JAVA]] and [[http://dtrace.org][DTrace]]. The initial purpose is to bring btrace like support for Windows (by using WinDBG), but since both GDB and LLDB support Python scripting, there is no reason we couldn't port this to also support GDB or LLDB later.
 
+*** Dependents
+**** [[http://pykd.codeplex.com/][Pykd]]: Python extension to access Debug Engine
+This is a great project, which allows us to write windbg extensions by Python 2.7, for current uni-trace, we will highly depends on this project to execute windbg commands.
+
+**** [[https://github.com/lihaoyi/macropy][MacroPy]]: Bring Macros to Python
+Pykd is great, but to setup a break point, we need to do the following things.
+#+BEGIN_SRC python
+from pykd import *
+def SomeBreakPointerHandler(bpId):
+    # do some handling for the break pointers.
+    pass
+
+setBp(expr("MyModule!MyNameSpace::MyClass::MyClass"), SomeBreakPointerHandler)
+
+go()
+#+END_SRC
+
+There is many code to write. When there are a lot of code (especially book keeping code), it is less likely we will write some script to trace the program execution (It may be easier to manually debug the program in visual studio). So, the goal of this project is to make us write less code to trace our program.
+
+Here Macros come into play. So, to trace all functions with name like "Create*" of a special class, one can write the following code in uni-trace.
+
+#+BEGIN_SRC python
+with TraceFunctionEnter('MyModule', 'MyNameSpace::MyClass::Create*', 'TestTrace1'):
+    dprintln("Trace Function Begin for MyNameSpace::MyClass::Create*")
+    dprintln(dbgCommand("k 5"))    # this is a windbg command to show the top 5 call stack.
+#+END_SRC
+
+Some kind of DTrace like, right? 
+
+** Usage
+*** Install dependent softwares: Pykd and MacroPy
+*** Download Uni-trace
+The only file you need to change is the "utrace_sample1.py". 
+*** Inside WinDBG
+First load Pykd extension
+#+BEGIN_SRC text
+.load pykd.pyd
+#+END_SRC
+
+Then, Run:
+#+BEGIN_SRC text
+!py ~/uni_trace_folder/run_trace.py
+#+END_SRC
+
+Continue to run your target program, during this time, you will see the break point's handler print your log messages in the windbg console. Press CTRL+BREAK to stop trace.
+
+** Happy Debugging (even on Windows)
