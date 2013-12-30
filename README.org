@@ -1,4 +1,4 @@
-+ uni-trace
+* uni-trace
 
 Universal Trace Debugger Engine. Currently, only support windbg on Windows, but the long term goal is to also support GDB or LLDB
 
